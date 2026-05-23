@@ -25,6 +25,8 @@ if security_config.DEBUG:
 
 
 # SaaS-level API routes (auth, subscriptions, tenant management)
-urlpatterns += []
+urlpatterns += [
+    path("api/v1/auth/", include("apps.authentication.urls")),
+]
 
 # handler404 = "apps.common.views.common_views.custom_404_handler"
