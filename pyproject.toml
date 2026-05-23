@@ -1,0 +1,236 @@
+[tool.poetry]
+name = "LawHub"
+version = "0.1.0"
+description = "Study Abroad Help Website & Consultation Platform"
+authors = ["Md. Sazzad Hossen <mshossen75@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^6.0.1"
+pydantic = "^2.12.5"
+pydantic-settings = "^2.12.0"
+django-environ = "^0.12.0"
+django-debug-toolbar = "^6.1.0"
+whitenoise = "^6.11.0"
+djangorestframework = "^3.16.1"
+django-filter = "^25.2"
+redis = "^7.1.0"
+django-redis = "^6.0.0"
+drf-spectacular = "^0.29.0"
+drf-spectacular-sidecar = "^2026.1.1"
+pytz = "^2025.2"
+celery = "^5.6.2"
+django-celery-results = "^2.6.0"
+django-admin-rangefilter = "^0.13.5"
+pillow = "^12.1.0"
+channels = "^4.3.2"
+channels-redis = "^4.3.0"
+gunicorn = "^25.3.0"
+uvicorn = {extras = ["standard"], version = "^0.46.0"}
+django-cors-headers = "^4.9.0"
+psycopg = {extras = ["binary"], version = "^3.3.4"}
+django-tenants = "^3.10.1"
+djangorestframework-simplejwt = "^5.5.1"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.14.11"
+poethepoet = "^0.40.0"
+pytest = "^9.0.3"
+pytest-django = "^4.12.0"
+pytest-cov = "^7.1.0"
+factory-boy = "^3.3.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+# ============================================================================
+# Ruff  Fast Python linter & formatter
+# Replaces: flake8, isort, pyupgrade, bugbear, django rules
+# ============================================================================
+
+[tool.ruff]
+# Target Python version
+target-version = "py312"
+
+# Line length (Black-compatible)
+line-length = 130
+
+# Display auto-fixable rules
+show-fixes = true
+
+# Paths Ruff should ignore completely
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "migrations",
+    "static",
+    "media",
+    "node_modules",
+]
+
+# ----------------------------------------------------------------------------
+# Lint rules
+# ----------------------------------------------------------------------------
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes (real bugs)
+    "I",    # isort (imports)
+    "UP",   # pyupgrade (modern Python)
+    "B",    # flake8-bugbear (bug patterns)
+    "DJ",   # flake8-django (Django best practices)
+]
+
+# Django-friendly ignores
+ignore = [
+    "DJ001",  # Allow null=True without blank=True
+    "DJ008",  # Allow model fields without verbose_name
+]
+
+# Allow Ruff to auto-fix everything safe
+fixable = ["ALL"]
+unfixable = []
+
+# ----------------------------------------------------------------------------
+# Import sorting (isort replacement)
+# ----------------------------------------------------------------------------
+[tool.ruff.lint.isort]
+known-first-party = ["config", "apps"]
+combine-as-imports = true
+force-sort-within-sections = true
+
+# ----------------------------------------------------------------------------
+# Per-file ignores (Django realities)
+# ----------------------------------------------------------------------------
+[tool.ruff.lint.per-file-ignores]
+# Auto-generated files
+"*/migrations/*.py" = ["ALL"]
+
+# Django settings often have intentional unused imports
+"config/**/*.py" = ["F401"]
+
+# ----------------------------------------------------------------------------
+# Formatter (optional replaces Black)
+# ----------------------------------------------------------------------------
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+# ----------------------------------------------------------------------------
+# Pytest settings
+# ----------------------------------------------------------------------------
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+
+# Default flags: reuse the database to speed up tests and ignore noisy warnings
+addopts = "--reuse-db -p no:warnings"
+
+
+[tool.poe.tasks]
+
+# ------------------------------------------------------------------
+# Project Setup
+# ------------------------------------------------------------------
+
+# Create Django project
+startproject = "django-admin startproject config ."
+
+
+# Create Django app inside apps/common/apps
+startapp = "zsh _scripts/create_app.sh"
+
+# Create Superuser
+createsuperuser = "python manage.py createsuperuser"
+
+# Create Directories
+
+directory = { shell = "_scripts/directory.sh ${BASE_DIR:-apps/}" }
+
+
+# ------------------------------------------------------------------
+# Development
+# ------------------------------------------------------------------
+
+# Run Django development server (binds to all interfaces)
+dev = "python manage.py runserver 0.0.0.0:8001"
+
+# Run Django using Uvicorn (for WebSockets)
+dev-uvicorn = "gunicorn config.asgi:application -c gunicorn.conf.py"
+
+# Django interactive shell
+shell = "python manage.py shell"
+
+# Run any Django management command
+manage = "python manage.py"
+
+
+# ------------------------------------------------------------------
+# Database & Migrations
+# ------------------------------------------------------------------
+
+# Create new migration files
+makemigrations = "python manage.py makemigrations"
+
+# Apply database migrations
+migrate = "python manage.py migrate"
+
+# Reset database (USE WITH CAUTION)
+reset-db = "python manage.py flush --no-input"
+
+# ------------------------------------------------------------------
+# Celery / Background Workers
+# ------------------------------------------------------------------
+
+# Run Celery worker (default queue)
+celery = "celery -A config worker -l info"
+
+# Alias (developer-friendly)
+worker = "celery -A config worker -l info"
+
+# Run Celery beat (if you use periodic tasks)
+celery-beat = "celery -A config beat -l info"
+
+
+# ------------------------------------------------------------------
+# Static files
+# ------------------------------------------------------------------
+
+# Collect static files for production (safe for CI/CD)
+collectstatic = "python manage.py collectstatic --noinput"
+
+
+# ------------------------------------------------------------------
+# Quality & Maintenance
+# ------------------------------------------------------------------
+
+# Remove Python cache & pytest artifacts
+clean = "rm -rf .pytest_cache __pycache__ **/__pycache__"
+
+# ⚠️ Remove ALL Django migration files (keeps __init__.py)
+
+purge-migrations = { shell = "find . -not -path '*/\\.*' -not -path '*/venv/*' -not -path '*/env/*' -path '*/migrations/*.py' -not -name '__init__.py' -type f -delete && find . -not -path '*/\\.*' -not -path '*/venv/*' -not -path '*/env/*' -path '*/migrations/*.pyc' -type f -delete" }
+
+# Run Django system checks
+check = "python manage.py check"
+
+# Show unapplied migrations
+showmigrations = "python manage.py showmigrations"
+
+
+# ------------------------------------------------------------------
+# Production helpers
+# ------------------------------------------------------------------
+
+# Run app using gunicorn (example: adjust module path)
+gunicorn = "gunicorn settings.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 120"
