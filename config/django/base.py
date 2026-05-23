@@ -54,7 +54,8 @@ class CoreConfig(DjangoConfig):
     )
 
     ASGI_APPLICATION: str = "config.asgi.application"
-    ROOT_URLCONF: str = "config.urls"
+    ROOT_URLCONF: str = "config.urls.tenant_urls"
+    PUBLIC_SCHEMA_URLCONF: str = "config.urls.public_urls"
     CORS_ALLOW_CREDENTIALS: bool = True
     CORS_ALLOW_HEADERS: tuple[str, ...] = tuple(default_headers) + (
         "x-device-id",
@@ -99,6 +100,7 @@ class CoreConfig(DjangoConfig):
             "CORS_ALLOW_HEADERS": list(self.CORS_ALLOW_HEADERS),
             "ASGI_APPLICATION": self.ASGI_APPLICATION,
             "ROOT_URLCONF": self.ROOT_URLCONF,
+            "PUBLIC_SCHEMA_URLCONF": self.PUBLIC_SCHEMA_URLCONF,
             "DEBUG_TOOLBAR_CONFIG": {"SHOW_TOOLBAR_CALLBACK": _show_debug_toolbar},
         }
 
