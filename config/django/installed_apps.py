@@ -33,12 +33,27 @@ class InstalledAppsConfig(DjangoConfig):
         "django.contrib.staticfiles",
         "apps.common.apps.CommonConfig",
         "apps.user.apps.UserConfig",
+        "apps.authentication.apps.AuthenticationConfig",
+        "apps.subscription.apps.SubscriptionConfig",
+        "apps.payment.apps.PaymentConfig",
         *THIRD_PARTY_APPS,
     ]
 
     TENANT_APPS: list[str] = [
         "django.contrib.contenttypes",
         "apps.business.apps.BusinessConfig",
+        "apps.product.apps.ProductConfig",
+        "apps.order.apps.OrderConfig",
+        "apps.purchase.apps.PurchaseConfig",
+        "apps.return.apps.ReturnConfig",
+        "apps.warehouse.apps.WarehouseConfig",
+        "apps.report.apps.ReportConfig",
+        "apps.dashboard.apps.DashboardConfig",
+        "apps.stock.apps.StockConfig",
+        "apps.employee.apps.EmployeeConfig",
+        "apps.payroll.apps.PayrollConfig",
+        "apps.expense.apps.ExpenseConfig",
+        "apps.earning.apps.EarningConfig",
     ]
 
     @computed_field

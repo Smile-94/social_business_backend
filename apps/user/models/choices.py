@@ -1,6 +1,12 @@
 from django.db import models
 
 
+# <<------------------------------------ User Type Choices --------------------------------->>
+class UserTypeChoices(models.TextChoices):
+    BUSINESS = "business", "Business"
+    STAFF = "staff", "Staff"
+
+
 # <<------------------------------------Gender Choices---------------------------------------->>
 class GenderChoices(models.TextChoices):
     MALE = "male", "Male"

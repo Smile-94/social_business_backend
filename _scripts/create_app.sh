@@ -37,11 +37,29 @@ urlpatterns = [
 ]
 EOF
 
-# --- NEW: Handle migrations directory separately ---
+# --- Handle migrations directory separately ---
 mkdir -p "$BASE_DIR/migrations"
 touch "$BASE_DIR/migrations/__init__.py"
-# ---------------------------------------------------
+# ----------------------------------------------
 
+# --- Handle management commands directory separately ---
+mkdir -p "$BASE_DIR/management/commands"
+touch "$BASE_DIR/management/__init__.py"
+touch "$BASE_DIR/management/commands/__init__.py"
+
+# Optional: Add a boilerplate management command
+cat <<EOF > "$BASE_DIR/management/commands/${APP_NAME}_sample_command.py"
+from django.core.management.base import BaseCommand
+
+class Command(BaseCommand):
+    help = 'Sample management command for the ${APP_NAME} app.'
+
+    def handle(self, *args, **options):
+        self.stdout.write(self.style.SUCCESS('Successfully ran command for ${APP_NAME}!'))
+EOF
+# -------------------------------------------------------
+
+# Removed "management" from here since it's handled above
 DIRECTORIES=(
     "admin" 
     "models" 

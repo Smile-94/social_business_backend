@@ -2,10 +2,10 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from apps.common.models.common_models import BaseModel, SoftDeleteModel, TimeStampedModel
+from apps.common.models.common_models import SoftDeleteModel, TimeStampedModel
+from apps.user.models.choices import UserTypeChoices
 from apps.user.models.role_model import Role
 
 
@@ -57,6 +57,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel, SoftDeleteModel
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
+    user_type = models.CharField(max_length=20, choices=UserTypeChoices.choices, default=UserTypeChoices.BUSINESS.value)
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email"]

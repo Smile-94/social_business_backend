@@ -51,6 +51,8 @@ class DatabaseConfig(DjangoConfig):
     # Ping the connection before reuse to detect stale connections in pools.
     DATABASE_CONN_HEALTH_CHECKS: bool = Field(default=True)
 
+    DATABASE_ROUTERS: tuple[str, ...] = ("django_tenants.routers.TenantSyncRouter",)
+
     @computed_field
     def DATABASES(self) -> dict:
         """Generate the Django DATABASES dictionary for the selected engine."""
@@ -84,6 +86,7 @@ class DatabaseConfig(DjangoConfig):
         return {
             "DEFAULT_AUTO_FIELD": self.DEFAULT_AUTO_FIELD,
             "DATABASES": self.DATABASES,
+            "DATABASE_ROUTERS": self.DATABASE_ROUTERS,
         }
 
 

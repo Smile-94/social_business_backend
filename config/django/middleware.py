@@ -26,6 +26,7 @@ class MiddlewareConfig(DjangoConfig):
     THIRD_PARTY_MIDDLEWARE: list[str] = Field(
         default=[
             "whitenoise.middleware.WhiteNoiseMiddleware",
+            "csp.middleware.CSPMiddleware",
         ]
     )
 
@@ -39,7 +40,7 @@ class MiddlewareConfig(DjangoConfig):
         # Inject debug toolbar only in safe environments
         if env_config.ENVIRONMENT in (EnvironmentChoices.LOCAL, EnvironmentChoices.DEVELOPMENT):
             # The Debug Toolbar docs recommend placing its middleware as early as possible
-            middleware.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
+            middleware.insert(1, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
         return middleware
 
