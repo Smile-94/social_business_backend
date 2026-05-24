@@ -4,6 +4,7 @@ from config.django._base_config import DjangoConfig
 from config.environment import EnvironmentChoices, env_config
 
 _DEFAULT_LOG_LEVEL = "DEBUG" if env_config.ENVIRONMENT in (EnvironmentChoices.LOCAL, EnvironmentChoices.DEVELOPMENT) else "INFO"
+_IS_LOCAL_ENV = env_config.ENVIRONMENT in (EnvironmentChoices.LOCAL, EnvironmentChoices.DEVELOPMENT)
 
 
 class LoggingConfig(DjangoConfig):
@@ -27,13 +28,26 @@ class LoggingConfig(DjangoConfig):
             "disable_existing_loggers": False,
             "formatters": {
                 "verbose": {
+                    "()": "apps.common.helper_class.logging.ExtraFormatter",
                     "format": "{levelname} {asctime} [{module}:{lineno}] {message}",
                     "style": "{",
                     "datefmt": "%Y-%m-%d %H:%M:%S",
                 },
+                "json": {
+                    "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+                    "format": "%(asctime)s %(levelname)s %(name)s %(module)s %(lineno)s %(message)s",
+                    "datefmt": "%Y-%m-%d %H:%M:%S",
+                },
             },
+            # ---------------------------------------------------------- #
+            # Handlers                                                     #
+            # ---------------------------------------------------------- #
             "handlers": {
-                "console": {"class": "logging.StreamHandler", "formatter": "verbose", "level": self.LOG_LEVEL},
+                "console": {
+                    "class": "logging.StreamHandler",
+                    "formatter": "verbose" if _IS_LOCAL_ENV else "json",
+                    "level": self.LOG_LEVEL,
+                },
             },
             "root": {"handlers": ["console"], "level": self.LOG_LEVEL},
             "loggers": {

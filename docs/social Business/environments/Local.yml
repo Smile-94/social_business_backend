@@ -1,6 +1,0 @@
-name: Local
-variables:
-  - name: BaseUrl
-    value: http://localhost:8001/api/v1
-  - name: accessToken
-    value: ""

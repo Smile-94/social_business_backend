@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -5,66 +6,72 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from _library.functions.formatters import response_formatter
 from apps.authentication.serializers.authentication_serializers import (
     BusinessRegistrationSerializer,
     CustomTokenObtainPairSerializer,
     RegistrationResponseSerializer,
     UserResponseSerializer,
 )
+from apps.authentication.services.authentication_services import BusinessUserService
+from apps.common.error_codes import BAD_REQUEST_DEVELOPER_ERROR, CONFLICT_ERROR
+from apps.common.helper_class.exceptions import ConflictError, ServiceValidationError
+from apps.common.helper_class.request_validator import RequestValidator
 
 
 # <<------------------------------------Register View---------------------------------------->>
 class BusinessRegisterView(APIView):
-    """
-    POST /api/auth/register/
-
-    Creates a new business owner account and returns JWT tokens immediately
-    so the user is logged in right after registration.
-
-    Request body:
-        {
-            "username":      "john_doe",        # optional – at least one identifier required
-            "email":         "john@acme.com",   # optional
-            "phone":         "+8801700000000",  # optional
-            "password":      "Str0ng!Pass",
-            "confirm_password": "Str0ng!Pass",
-            "business_name": "Acme Corp"
-        }
-
-    Response 201:
-        {
-            "access":  "<jwt-access-token>",
-            "refresh": "<jwt-refresh-token>",
-            "user": { ... }
-        }
-    """
-
     permission_classes = [AllowAny]
 
+    model_class = User
+    service_class = BusinessUserService
+    request_validator = RequestValidator
+    serializer_class = BusinessRegistrationSerializer
+    response_serializer = RegistrationResponseSerializer
+
     def post(self, request, *args, **kwargs):
-        serializer = BusinessRegistrationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        #
+        error = self.request_validator.validate_empty_data(request, self.serializer_class, caller=self)
+        if error:
+            return error
 
-        user = serializer.save()
+        error = self.request_validator.validate_invalid_fields(self.model_class, request.data, self.serializer_class, caller=self)
+        if error:
+            return error
 
-        # Issue tokens right away — no extra login step needed
-        refresh = RefreshToken.for_user(user)
-        # Inject custom claims (mirrors CustomTokenObtainPairSerializer)
-        refresh["username"] = user.username
-        refresh["email"] = user.email
-        refresh["user_type"] = user.user_type
-        refresh["is_staff"] = user.is_staff
+        serializer = self.serializer_class(data=request.data)
+        error = self.request_validator.validate_serializer(serializer, caller=self)
+        if error:
+            return error
 
-        response_data = {
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-            "user": UserResponseSerializer(user).data,
-        }
+        try:
+            service = self.service_class()
+            result = service.create_user(
+                serializer.validated_data,
+                action_user=request.user,
+            )
+        except ConflictError as exc:
+            return response_formatter(CONFLICT_ERROR, {"message": str(exc)})
+        except ServiceValidationError as exc:
+            return response_formatter(BAD_REQUEST_DEVELOPER_ERROR, {"message": str(exc)})
 
-        return Response(
-            RegistrationResponseSerializer(response_data).data,
-            status=status.HTTP_201_CREATED,
-        )
+        # refresh = RefreshToken.for_user(user)
+        # refresh["username"] = user.username
+        # refresh["email"] = user.email
+        # refresh["user_type"] = user.user_type
+        # refresh["is_staff"] = user.is_staff
+
+        # response_data = {
+        #     "access": str(refresh.access_token),
+        #     "refresh": str(refresh),
+        #     "user": UserResponseSerializer(user).data,
+        # }
+
+        # return Response(
+        #     RegistrationResponseSerializer(response_data).data,
+        #     status=status.HTTP_201_CREATED,
+        # )
+        return Response(result.user.pk, status=status.HTTP_201_CREATED)
 
 
 # <<------------------------------------Login View---------------------------------------->>
