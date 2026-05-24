@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import Field, SecretStr
 
 from config.django._base_config import DjangoConfig
@@ -27,11 +29,12 @@ class AuthConfig(DjangoConfig):
         "django.contrib.auth.backends.ModelBackend",
     ]
 
-    AUTH_PASSWORD_VALIDATORS: list[dict[str, str]] = [
+    AUTH_PASSWORD_VALIDATORS: list[dict[str, Any]] = [
         {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
         {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
         {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
         {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+        # {"NAME": "apps.common.helper_class.password.StrongPasswordValidator", "OPTIONS": {"min_length": 8}},
     ]
 
     def as_django_settings(self) -> dict:

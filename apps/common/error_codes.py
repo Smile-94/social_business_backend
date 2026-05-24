@@ -91,3 +91,19 @@ SERVICE_UNAVAILABLE_ERROR = ErrorResponse(
     client=ResponseClient.DEVELOPER,
     data={},
 ).model_dump()
+
+THROTTLED_ERROR = ErrorResponse(
+    status=status.HTTP_429_TOO_MANY_REQUESTS,
+    type=ErrorType.ERROR,
+    message="429 Too Many Requests",
+    client=ResponseClient.DEVELOPER,
+    data={},
+).model_dump()
+
+PERMISSION_DENIED_ERROR = ErrorResponse(
+    status=status.HTTP_403_FORBIDDEN,
+    type=ErrorType.ERROR,
+    message="403 Forbidden",
+    client=ResponseClient.DEVELOPER,
+    data={},
+)

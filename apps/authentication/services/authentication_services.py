@@ -7,6 +7,8 @@ from django.db import IntegrityError, transaction
 
 from apps.common.helper_class.exceptions import ConflictError, ServiceValidationError
 from apps.user.models.choices import UserTypeChoices
+from apps.common.functions.validation_error import convert_django_validation_error
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -95,10 +97,6 @@ class BusinessUserService:
 
         return CreateUserResult(user=user, created=True)
 
-    # ------------------------------------------------------------------ #
-    # Private — persistence                                               #
-    # ------------------------------------------------------------------ #
-
     @transaction.atomic
     def _persist_user(self, safe_data: dict[str, Any]) -> User:
         """
@@ -113,7 +111,10 @@ class BusinessUserService:
             user_type=UserTypeChoices.BUSINESS.value,
         )
         user.set_password(password)  # ← never pass raw password to create()
-        user.full_clean()  # ← triggers model-level validation
+        try:
+            user.full_clean()  # ← may raise DjangoValidationError
+        except DjangoValidationError as exc:
+            raise convert_django_validation_error(exc) from exc  # ← convert, never swallow
         user.save()
 
         return user
@@ -141,10 +142,6 @@ class BusinessUserService:
         if stripped:
             logger.warning("Stripped unexpected fields from user creation payload.", extra={"stripped_fields": sorted(stripped)})
         return safe
-
-    # ------------------------------------------------------------------ #
-    # Private — error handling                                            #
-    # ------------------------------------------------------------------ #
 
     def _handle_integrity_error(self, exc: IntegrityError, safe_data: dict[str, Any], action_user: Any) -> None:
         """

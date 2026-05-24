@@ -15,6 +15,7 @@ from apps.authentication.serializers.authentication_serializers import (
 )
 from apps.authentication.services.authentication_services import BusinessUserService
 from apps.common.error_codes import BAD_REQUEST_DEVELOPER_ERROR, CONFLICT_ERROR
+from apps.common.success_codes import CREATED_SUCCESS
 from apps.common.helper_class.exceptions import ConflictError, ServiceValidationError
 from apps.common.helper_class.request_validator import RequestValidator
 
@@ -71,7 +72,7 @@ class BusinessRegisterView(APIView):
         #     RegistrationResponseSerializer(response_data).data,
         #     status=status.HTTP_201_CREATED,
         # )
-        return Response(result.user.pk, status=status.HTTP_201_CREATED)
+        return response_formatter(CREATED_SUCCESS, {"user_id": result.user.pk, "message": "User created."})
 
 
 # <<------------------------------------Login View---------------------------------------->>
